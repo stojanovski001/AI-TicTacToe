@@ -14,6 +14,7 @@ print(f'Using device: {device}')
 
 if __name__ == "__main__":
     model_path = 'tic_tac_toe_model.pth'
+    trainer = None  # Initialize trainer variable
 
     if os.path.exists(model_path):
         choice = input("A trained model exists. Do you want to retrain it? (y/n): ").strip().lower()
@@ -22,7 +23,7 @@ if __name__ == "__main__":
             print("Loading the existing model for further training...")
             policy_net = DQN(device)
             policy_net.load_state_dict(torch.load(model_path, map_location=device))
-            trainer = Trainer(device, policy_net)
+            trainer = Trainer(device, policy_net)  # Create an instance of Trainer
             policy_net = trainer.train()
         else:
             print("Loading the trained model for playing...")
@@ -32,8 +33,12 @@ if __name__ == "__main__":
     else:
         # Train the model from scratch
         print("Training the model from scratch...")
-        trainer = Trainer(device)
+        trainer = Trainer(device)  # Create an instance of Trainer
         policy_net = trainer.train()
+
+    # Save the model after training
+    if trainer:  # Check if trainer is defined
+        trainer.save_model(model_path)
 
     # Play against the AI
     play(policy_net, device)

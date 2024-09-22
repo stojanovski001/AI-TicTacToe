@@ -11,7 +11,7 @@ from model import DQN
 class Trainer:
     def __init__(self, device, policy_net=None):
         self.device = device
-        self.num_episodes = int(os.getenv('NUM_EPISODES', 50000))
+        self.num_episodes = int(os.getenv('NUM_EPISODES', 5000))
         self.gamma = float(os.getenv('GAMMA', 0.99))
         self.epsilon_start = float(os.getenv('EPSILON_START', 1.0))
         self.epsilon_end = float(os.getenv('EPSILON_END', 0.1))
@@ -43,7 +43,6 @@ class Trainer:
     def optimize_model(self):
         if len(self.memory) < self.batch_size:
             return
-
         transitions = self.memory.sample(self.batch_size)
         batch_state, batch_action, batch_reward, batch_next_state, batch_done = zip(*transitions)
 
@@ -85,7 +84,6 @@ class Trainer:
                     np.exp(-1. * self.steps_done / self.epsilon_decay)
 
                 # AI's turn (Player 1)
-                # Epsilon-greedy action selection
                 if random.random() < epsilon:
                     action = random.choice(game.available_actions())
                 else:
@@ -101,9 +99,8 @@ class Trainer:
                 next_state_np, reward, done = game.step(action, 1)
                 next_state = torch.FloatTensor(next_state_np).to(self.device)
 
-                # If not done, opponent's turn (Player -1)
                 if not done:
-                    # Opponent's action using opponent_net
+                    # Stronger opponent strategy
                     with torch.no_grad():
                         q_values = self.opponent_net(next_state)
                         masked_q_values = q_values.clone()
@@ -115,8 +112,10 @@ class Trainer:
                     next_state_np, opponent_reward, done = game.step(opponent_action, -1)
                     next_state = torch.FloatTensor(next_state_np).to(self.device)
 
-                    if opponent_reward != 0:
-                        reward = -1  # Penalize if opponent wins
+                    if opponent_reward == 1:
+                        reward = -1  # Penalize if the opponent wins
+                    elif opponent_reward == 0:
+                        reward = 0  # Draw
 
                 # Store the transition in memory
                 self.memory.push((state, action, reward, next_state, done))
@@ -136,7 +135,7 @@ class Trainer:
                 self.opponent_net.load_state_dict(self.policy_net.state_dict())
 
             # Print progress
-            if (episode + 1) % 5000 == 0:
+            if (episode + 1) % 2500 == 0:
                 print(f"Episode {episode + 1}/{self.num_episodes}")
 
         # Save the trained model
@@ -144,3 +143,6 @@ class Trainer:
         print("Training complete and model saved.")
 
         return self.policy_net
+
+    def save_model(self, filepath):
+        torch.save(self.policy_net.state_dict(), filepath)

@@ -3,16 +3,26 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class DQN(nn.Module):
-    def __init__(self, device):
+    def __init__(self, device, num_layers=10, num_neurons=1024):
         super(DQN, self).__init__()
         self.device = device
-        self.fc1 = nn.Linear(9, 128)
-        self.fc2 = nn.Linear(128, 128)
-        self.fc3 = nn.Linear(128, 9)
+
+        # Create a list to hold layers
+        layers = [nn.Linear(9, num_neurons)]
+        layers.append(nn.ReLU())
         
+        # Create hidden layers
+        for _ in range(num_layers - 1):
+            layers.append(nn.Linear(num_neurons, num_neurons))
+            layers.append(nn.ReLU())
+            layers.append(nn.Dropout(p=0.2))  # Dropout after each hidden layer
+
+        # Output layer
+        layers.append(nn.Linear(num_neurons, 9))
+        
+        # Register the layers
+        self.network = nn.Sequential(*layers)
+
     def forward(self, x):
         x = x.to(self.device)  # Move input tensor to the device
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
+        return self.network(x)
