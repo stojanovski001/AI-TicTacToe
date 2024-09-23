@@ -11,7 +11,7 @@ from model import DQN
 class Trainer:
     def __init__(self, device, policy_net=None):
         self.device = device
-        self.num_episodes = int(os.getenv('NUM_EPISODES', 5000))
+        self.num_episodes = int(os.getenv('NUM_EPISODES', 250000))
         self.gamma = float(os.getenv('GAMMA', 0.99))
         self.epsilon_start = float(os.getenv('EPSILON_START', 1.0))
         self.epsilon_end = float(os.getenv('EPSILON_END', 0.1))
