@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from trainer import Trainer
 from model import DQN
 from play import play
+# from torch.utils.tensorboard import SummaryWriter
 
 # Load environment variables
 load_dotenv()
@@ -29,6 +30,16 @@ if __name__ == "__main__":
             print("Loading the trained model for playing...")
             policy_net = DQN(device)
             policy_net.load_state_dict(torch.load(model_path, map_location=device))
+            policy_net.to(device)
+            # writer = SummaryWriter("torchlogs/")
+            # # set X to debuging to tensor([ 0.,  0.,  1.,  0., -1.,  0.,  0.,  0.,  0.], device='cuda:0')
+            # input_tensor = torch.FloatTensor([0, 0, 1, 0, -1, 0, 0, 0, 0]).to(device)
+
+            # writer.add_graph(policy_net, input_tensor)
+            # writer.close()
+            # make_dot(y.mean(), params=dict(policy_net.named_parameters()))
+
+
             policy_net.eval()  # Set the model to evaluation mode
     else:
         # Train the model from scratch

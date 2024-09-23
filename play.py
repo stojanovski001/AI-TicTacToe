@@ -3,6 +3,9 @@
 import torch
 import os
 from game import TicTacToe
+from torchviz import make_dot
+
+
 
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -18,7 +21,7 @@ def print_board(board):
     print()
 
 def print_empty_board():
-    clear_terminal()  # Clear the terminal before printing
+    # clear_terminal()  # Clear the terminal before printing
     print(" 1 | 2 | 3")
     print("-----------")
     print(" 4 | 5 | 6")
@@ -31,6 +34,9 @@ def play(model, device):
     model.eval()      # Set model to evaluation mode
     game = TicTacToe()
     state = torch.FloatTensor(game.reset()).to(device)
+    # print the state for debugging
+    print(state)
+
     done = False
 
     # Ask user who goes first
@@ -53,6 +59,11 @@ def play(model, device):
             action = torch.argmax(masked_q_values).item()
         _, reward, done = game.step(action, -1)  # AI plays as 'O'
         print_empty_board()
+        print("action")
+        print(action)
+
+        dot = make_dot(q_values, params=dict(model.named_parameters()), show_attrs=True, show_saved=True)
+        dot.render('masked_q_values_graph', format='png')  # Saves as 'masked_q_values_graph.png'
         print_board(game.board)
         if done:
             if reward == -1:
@@ -77,6 +88,7 @@ def play(model, device):
                 print("Please enter a number between 1 and 9.")
         _, reward, done = game.step(user_action, 1)  # Human plays as 'X'
         state = torch.FloatTensor(game.board.copy()).to(device)
+        print(state)
         print_board(game.board)
         if done:
             if reward == 1:

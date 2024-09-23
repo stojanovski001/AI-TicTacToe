@@ -11,12 +11,12 @@ from model import DQN
 class Trainer:
     def __init__(self, device, policy_net=None):
         self.device = device
-        self.num_episodes = int(os.getenv('NUM_EPISODES', 250000))
+        self.num_episodes = int(os.getenv('NUM_EPISODES', 2500))
         self.gamma = float(os.getenv('GAMMA', 0.99))
         self.epsilon_start = float(os.getenv('EPSILON_START', 1.0))
         self.epsilon_end = float(os.getenv('EPSILON_END', 0.1))
         self.epsilon_decay = float(os.getenv('EPSILON_DECAY', 100000))
-        self.learning_rate = float(os.getenv('LEARNING_RATE', 0.001))
+        self.learning_rate = float(os.getenv('LEARNING_RATE', 0.0001))
         self.target_update = int(os.getenv('TARGET_UPDATE', 1000))
         self.memory_capacity = int(os.getenv('MEMORY_CAPACITY', 10000))
         self.batch_size = int(os.getenv('BATCH_SIZE', 64))
@@ -83,6 +83,7 @@ class Trainer:
                 epsilon = self.epsilon_end + (self.epsilon_start - self.epsilon_end) * \
                     np.exp(-1. * self.steps_done / self.epsilon_decay)
 
+                print(f"Episode: {episode + 1}/{self.num_episodes}, Epsilon: {epsilon:.2f}")
                 # AI's turn (Player 1)
                 if random.random() < epsilon:
                     action = random.choice(game.available_actions())
@@ -94,6 +95,7 @@ class Trainer:
                             if i not in game.available_actions():
                                 masked_q_values[i] = -float('inf')
                         action = torch.argmax(masked_q_values).item()
+                        print(f"Q-values: {q_values}, Masked Q-values: {masked_q_values}, Action: {action}")
 
                 # Take action
                 next_state_np, reward, done = game.step(action, 1)
